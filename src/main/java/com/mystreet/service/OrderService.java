@@ -35,9 +35,6 @@ public class OrderService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
 
-//        productRepository.findById(orderRequestDto.getProductId())
-//                .orElseThrow(() -> new RuntimeException("Product not found with id: " + orderRequestDto.getProductId()));
-
         // 2. Initialize the parent Order entity
         Order order = new Order();
         order.setUser(user);
@@ -82,6 +79,11 @@ public class OrderService {
 
         // 5. Save the parent Order entity, which will cascade and save the child OrderItem entities
         return orderRepository.save(order);
+    }
+
+    public Order getOrderById(UUID orderId) {
+        return orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
     }
 
     public List<Order> getOrdersByUserId(UUID userId) {

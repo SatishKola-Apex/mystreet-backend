@@ -29,6 +29,12 @@ public class OrderController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdOrder);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<Order> getOrderById(@PathVariable UUID id) {
+        Order order = orderService.getOrderById(id);
+        return ResponseEntity.ok(order);
+    }
+
     @GetMapping("/mine")
     public ResponseEntity<List<Order>> getMyOrders(@RequestParam UUID userId) {
         List<Order> orders = orderService.getOrdersByUserId(userId);

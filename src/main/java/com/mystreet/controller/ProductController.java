@@ -3,6 +3,8 @@ package com.mystreet.controller;
 import com.mystreet.dto.ProductRequestDto;
 import com.mystreet.entity.Product;
 import com.mystreet.service.ProductService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +15,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/products")
+@Tag(name = "Products", description = "Endpoints for managing products")
 public class ProductController {
 
     private final ProductService productService;
@@ -22,6 +25,7 @@ public class ProductController {
     }
 
     @GetMapping
+    @Operation(summary = "Get all products", description = "Retrieve a list of all available products with optional filtering by brand and size.")
     public ResponseEntity<List<Product>> getProducts(
             @RequestParam(required = false) String brand,
             @RequestParam(required = false) String size) {
@@ -30,12 +34,14 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Get product by ID", description = "Retrieve a product by its unique identifier.")
     public ResponseEntity<Product> getProductById(@PathVariable UUID id) {
         Product product = productService.getProductById(id);
         return ResponseEntity.ok(product);
     }
 
     @PostMapping
+    @Operation(summary = "Create product", description = "Create a new product to the catalog with the provided details.")
     public ResponseEntity<Product> createProduct(
             @RequestParam UUID userId,
             @Valid @RequestBody ProductRequestDto productDto) {
@@ -44,6 +50,7 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
+    @Operation(summary = "Update product", description = "Update an existing product's details by its unique identifier.")
     public ResponseEntity<Product> updateProduct(
             @PathVariable UUID id,
             @RequestParam UUID userId,
@@ -53,6 +60,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
+    @Operation(summary = "Delete product", description = "Delete a product from the catalog by its unique identifier.")
     public ResponseEntity<Void> deleteProduct(
             @PathVariable UUID id,
             @RequestParam UUID userId) {

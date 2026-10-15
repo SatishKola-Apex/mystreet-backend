@@ -6,6 +6,8 @@ import com.mystreet.entity.User;
 import com.mystreet.exception.UnauthorizedException;
 import com.mystreet.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,6 +21,8 @@ import java.util.Collections;
 @Service
 public class AuthService {
 
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -29,8 +33,11 @@ public class AuthService {
 
     @Transactional
     public User register(RegisterRequestDto requestDto) {
+        log. info("Processign registration request for email: {}", requestDto.getEmail());
+
         // Check if user with the same email already exists
         if (userRepository.findByEmail(requestDto.getEmail()).isPresent()) {
+            log.warn("Registration failed - Email already exists: {}", requestDto.getEmail());
             throw new IllegalArgumentException("User with this email already exists");
         }
 
@@ -46,16 +53,23 @@ public class AuthService {
 
         // Save the new user to the database
         userRepository.save(user);
+        log.info("User registered successfully: {} (ID: {})", user.getEmail(), user.getId());
         return user;
     }
 
     public User authenticate(LoginRequestDto requestDto, HttpServletRequest request) {
+        log.info("Processign login attempt for email: {}", requestDto.getEmail());
+
         // Find the user by email or throw unauthorized exception if not found
         User user = userRepository.findByEmail(requestDto.getEmail())
-                .orElseThrow(() -> new UnauthorizedException("Invalid email or password"));
+                .orElseThrow(() -> {
+                    log.warn("Login failed - Email not found: {}", requestDto.getEmail());
+                    return new UnauthorizedException("Invalid email or password");
+                });
 
         // Check if the provided password matches the stored password hash
         if (!passwordEncoder.matches(requestDto.getPassword(), user.getPasswordHash())) {
+            log.warn("Login failed - Incorrect password provided for email: {}", requestDto.getEmail());
             throw new UnauthorizedException("Invalid email or password");
         }
 
@@ -71,11 +85,13 @@ public class AuthService {
                 SecurityContextHolder.getContext()
         ); // Create a new session if one doesn't exist
 
+        log.info("User authenticated successfully: {} | Role: [{}]", user.getEmail(), user.isAdmin() ? "ADMIN" : "USER");
         // If authentication is successful, return the authenticated user
         return user;
     }
 
     public void logout() {
+        log.info("User logging out, clearing security context");
         // Clear the security context
         SecurityContextHolder.clearContext();
     }
